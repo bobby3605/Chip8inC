@@ -245,7 +245,6 @@ void emulate(struct CHIP8 chip, int size) {
 				for (int x = 0; x < (64*32); x++) {
 					chip.Display[x] = 0;
 				}
-				display(chip);
 			} else if (opcode == 0x00ee) {
 				chip.PC = chip.stack.size[chip.stack.top];
 				chip.stack.top--;
@@ -342,7 +341,6 @@ void emulate(struct CHIP8 chip, int size) {
 				}
 			}
 
-			display(chip);
 			break;
 		case 0xe000:
 			if ((opcode & 0x00ff) == 0x009E) {
