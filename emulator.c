@@ -5,13 +5,6 @@
 #include <stdbool.h>
 #include <math.h>
 
-/*
-**
-** TODO: add timers, keyboard
-**
-**
- */
-
 const int SCREEN_WIDTH = 64*8;
 const int SCREEN_HEIGHT = 32*8;
 
@@ -30,7 +23,7 @@ struct STACK
 
 struct CHIP8
 {
-	// 4k size, arrays start at 0, maybe not
+	// 4k size, arrays start at 0
 	unsigned char RAM[4096];
 
 	// Program counter
@@ -93,39 +86,9 @@ int main(int argc, char **argv)
 	for(unsigned char x = 0x00; x < 0x10; x++){
 		chip8.keyboard[x] = false;
 	}
-	// First 200 bytes are for OS
-	// SHOULD BE 0x200
-	// OR 512
-	// Might not be needed because nothing is done with this
-	/*for (int i; i <= 200; i++)
-	{
-		cpu.RAM[i] = 0;
-	}*/
-
 	// Read file into ram
 	fread(chip8.RAM + 512, 1, fsize, f);
 	fclose(f);
-	/*
-
-
-	for(int i; i<fsize + 512; i++){
-		printf("%x", chip8.RAM[i]);
-	}
-	printf("\n");
-	*/
-	// Print ram in opcode format
-	/*for (int i = 0; i <= fsize; i+=2) {
-		printf("%02x%02x \n", ram[i+200], ram[i+201]);
-	}*/
-
-	// Set display to all 0
-/*		for (int x = 0; x <= 64; x++) {
-			for (int y = 0; y <= 32; y++) {
-			//	printf("X: %d Y: %d\n", x,y);
-				chip8.Display[x][y] = 0;
-			}
-		}
-*/
 
 	// Initialize font
 	unsigned char font[80] = { 0xF0, 0x90, 0x90, 0x90, 0xF0, 0x20, 0x60, 0x20, 0x20, 0x70, 0xF0, 0x10, 0xF0, 0x80, 0xF0, 0xF0, 0x10, 0xF0, 0x10, 0xF0, 0x90, 0x90, 0xF0, 0x10, 0x10, 0xF0, 0x80, 0xF0, 0x10, 0xF0, 0xF0, 0x80, 0xF0, 0x90, 0xF0, 0xF0, 0x10, 0x20, 0x40, 0x40, 0xF0, 0x90, 0xF0, 0x90, 0xF0, 0xF0, 0x90, 0xF0, 0x10, 0xF0, 0xF0, 0x90, 0xF0, 0x90, 0x90, 0xE0, 0x90, 0xE0, 0x90, 0xE0, 0xF0, 0x80, 0x80, 0x80, 0xF0, 0xE0, 0x90, 0x90, 0x90, 0xE0, 0xF0, 0x80, 0xF0, 0x80, 0xF0, 0xF0, 0x80, 0xF0, 0x80, 0x80 };
@@ -133,46 +96,9 @@ int main(int argc, char **argv)
 		chip8.RAM[i] = font[i];
 	}
 
-// Print ram
-/*	
-	for (int i = 0; i <= 0x1FF; i++) {
-		printf("%02x %d\n", chip8.RAM[i],i);
-	}*/
-
 	// initialize emulation
 	emulate(chip8, fsize);
 
-}
-
-void pop(struct STACK stack) {
-	/*
-	unsigned int item;
-	item = stack.size[stack.top];*/
-	stack.top = stack.top - 1;
-	printf("Pop \n");
-
-}
-void push(struct STACK stack, unsigned int item) {
-	stack.top += 1;
-	stack.size[stack.top] = item;
-	printf("Push %d %x\n", stack.top, stack.size[stack.top]);
-
-}
-
-void display(struct CHIP8 chip){
-	for (int xs = 0; xs <= 64; xs++) {
-		for (int ys = 0; ys <= 32; ys++) {
-			// If nothing prints, then all is 0.
-				if (chip.Display[xs * ys] == 1) {
-					printf("*");
-				} else if (chip.Display[xs * ys] == 0) {
-					// "" does nothing
-					printf("");
-				} else {
-					printf("");
-				}
-			}
-		}
 }
 
 unsigned char keymap(SDL_Event e){
@@ -274,9 +200,7 @@ void emulate(struct CHIP8 chip, int size) {
 
 			prev_time = timeInMS();
 	if(chip.delay_timer > 0){
-		//printf("TD: %ll \n", (curr_time - prev_time));
 		chip.delay_timer--;
-	//	printf("Delay");
 	}
 	if(chip.sound_timer > 0){
 		SDL_PauseAudioDevice(audio_device, 0);
@@ -308,32 +232,10 @@ void emulate(struct CHIP8 chip, int size) {
 
 
 		// set opcode
-		/*int test = 0;
-		unsigned int opcode;
-		if(test==0){
-		opcode = (chip.RAM[chip.PC + 200] << 8) | (chip.RAM[chip.PC + 200 + 1]);
-		test = 1;
-		} else{
-		opcode = (chip.RAM[chip.PC] << 8) | (chip.RAM[chip.PC + 1]);
-		}*/
 		unsigned int opcode = (chip.RAM[chip.PC] << 8) | (chip.RAM[chip.PC + 1]);
-		//printf("%04x", opcode);
 
 		unsigned int head = (opcode & 0xf000);
 		unsigned int tail = (opcode & 0x0fff);
-		//printf("%04x Head: %x Tail: %x ", opcode, head, tail);
-		
-	//	printf("Opcode: %x \n", opcode);
-		/*
-		printf("PC: %d \n", chip.PC);
-		printf("PCRAM: %x \n", chip.RAM[chip.PC]);
-		*/
-
-		// 0x1228 sets the PC to 0x228. This is intended.
-		// However, when getting the opcode it adds 0x200
-		// Now its looking for opcode 0x428, it should be trying to get 0x228
-		// Maybe the program is written incorrectly??? Or I'm doing something stupid. 
-		// It calls the rest of the opcodes correctly. What if I edit the ch8 0x028 instead of 0x228.
 
 		switch (head) {
 		case 0x0000:
@@ -345,8 +247,6 @@ void emulate(struct CHIP8 chip, int size) {
 				}
 				display(chip);
 			} else if (opcode == 0x00ee) {
-				// Pop off the stack
-				// Maybe not
 				chip.PC = chip.stack.size[chip.stack.top];
 				chip.stack.top--;
 			} else {
@@ -386,7 +286,6 @@ void emulate(struct CHIP8 chip, int size) {
 			} else if ((opcode & 0x000f) == 0x0003) {
 				chip.V[(opcode & 0x0f00) >> 8] = (chip.V[(opcode & 0x0f00) >> 8] ^ chip.V[(opcode & 0x00f0) >> 4]);
 			} else if ((opcode & 0x000f) == 0x0004) {
-				// Might not actually update value
 				if ((chip.V[(opcode & 0x0f00) >> 8] += chip.V[(opcode & 0x00f0) >> 4]) > 255) {
 					chip.V[15] = 1;
 				}
@@ -398,7 +297,6 @@ void emulate(struct CHIP8 chip, int size) {
 				}
 				chip.V[(opcode & 0x0f00) >> 8] = (chip.V[(opcode & 0x0f00) >> 12] - chip.V[(opcode & 0x00f0) >> 4]);
 			} else if ((opcode & 0x000f) == 0x0006) {
-				// Might not be a correct mask
 				chip.V[15] = ((chip.V[opcode & 0x000f]) & 0x1);
 				chip.V[(opcode & 0x0f00) >> 8] = chip.V[(opcode & 0x0f00) >> 8] >> 1;
 			} else if ((opcode & 0x000f) == 0x0007) {
@@ -409,7 +307,6 @@ void emulate(struct CHIP8 chip, int size) {
 				}
 				chip.V[(opcode & 0x00f0) >> 4] = (chip.V[(opcode & 0x00f0) >> 4] - chip.V[(opcode & 0x0f00) >> 8]);
 			} else if ((opcode & 0x000f) == 0x000e) {
-				// Might not be a correct mask
 				chip.V[15] = ((chip.V[(opcode & 0xf000) >> 16]) & 0x1);
 				chip.V[(opcode & 0x0f00) >> 8] = chip.V[(opcode & 0x0f00) >> 8] << 1;
 			} else {
@@ -422,10 +319,8 @@ void emulate(struct CHIP8 chip, int size) {
 			} break;
 		case 0xa000: chip.I = (opcode & 0x0fff); break;
 		case 0xb000: chip.PC = (chip.V[0] + (opcode & 0x0fff)); break;
-		// Might want to srand(time.time())
 		case 0xc000: chip.V[(opcode & 0x0f00) >> 8] = (rand() % 255) & (opcode & 0x00ff); break;
 		case 0xd000:
-			//printf("0xd : %x", opcode);
 			x = chip.V[(opcode & 0x0F00) >> 8];
 			y = chip.V[(opcode & 0x00F0) >> 4];
 			n = (opcode & 0x000F);
@@ -516,7 +411,5 @@ void emulate(struct CHIP8 chip, int size) {
 
 	}
 	printf("out of loop \n");
-	//printf("PC: %d \n", chip.PC);
-
 
 }
