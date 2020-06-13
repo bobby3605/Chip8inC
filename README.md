@@ -7,5 +7,5 @@ make
 ```
 Run:
 ```
-./emulator pong
+./emulator pong.ch8
 ```
